@@ -75,7 +75,7 @@
     if (v('msg')) {
       js = "let button = document.querySelector('button');\n\nbutton.onclick = function() {\n" +
         "  alert('" + jsText(v('msg')) + "');\n" +
-        (v('magic') ? "  document.body.style.background = '" + v('magic') + "';\n" : '') + '};\n';
+        (v('swap') ? "  let img = document.querySelector('img');\n  img.src = 'img/" + v('swap') + ".svg';\n" : '') + '};\n';
     }
     return { html, css, js };
   }
@@ -109,10 +109,11 @@
 
   function siteDoc(n, preview) {
     const c = siteCode(n);
-    const html = c.html.replace(/img\/([a-z]+)\.svg/g, (all, name) => IMAGES[name] ? imgUri(name) : all);
+    // img/cat.svg → встроенная картинка (и в HTML, и в коде кнопки), чтобы сайт работал без папки img
+    const inline = code => code.replace(/img\/([a-z]+)\.svg/g, (all, name) => IMAGES[name] ? imgUri(name).replace(/'/g, '%27') : all);
     return '<!DOCTYPE html>\n<html lang="ru">\n<head>\n<meta charset="UTF-8">\n<title>Мой сайт</title>\n' +
       (preview ? PREVIEW_ALERT : '') +
-      '<style>\n' + c.css + '</style>\n</head>\n<body>\n' + html + '<script>\n' + c.js + '<\/script>\n</body>\n</html>\n';
+      '<style>\n' + c.css + '</style>\n</head>\n<body>\n' + inline(c.html) + '<script>\n' + inline(c.js) + '<\/script>\n</body>\n</html>\n';
   }
   function showSite() {
     $('preview').srcdoc = siteDoc(state.done, true);
@@ -157,7 +158,7 @@
     }
     $('chips').innerHTML = chips;
 
-    $('nextBtn').classList.add('hidden');
+    showNext(step < state.done);
     say(s.say);
     renderDots();
     fitSlot();
@@ -169,13 +170,13 @@
       return '<button class="dot ' + cls + '" data-step="' + i + '" title="Шаг ' + (i + 1) + '">' +
         (i + 1) + '</button>';
     }).join('');
-    $('playerName').textContent = state.name ? state.name : '';
+    if (window.Nav) Nav.render();
   }
 
   function fitSlot() {
     const slot = $('slot');
     if (!slot) return;
-    slot.style.width = Math.max(slot.value.length, slot.placeholder.length, 3) + 1.5 + 'ch';
+    slot.style.width = 'calc(' + Math.max(slot.value.length, slot.placeholder.length, 3) + 'ch + 24px)';
   }
 
   // ===== Запуск =====
@@ -208,8 +209,14 @@
     showSite();
     say(s.win);
     renderDots();
-    if (step < STEPS.length - 1) $('nextBtn').classList.remove('hidden');
-    if (first && state.done === STEPS.length) setTimeout(showDiploma, 2500);
+    showNext(true);
+  }
+
+  // «Дальше»: к следующему шагу, а после 10-го — в конструктор
+  function showNext(show) {
+    const last = step === STEPS.length - 1;
+    $('nextBtn').textContent = last ? 'Дальше: конструктор →' : 'Дальше →';
+    $('nextBtn').classList.toggle('hidden', !show);
   }
 
   function goStep(i) {
@@ -220,7 +227,10 @@
 
   // ===== События =====
   $('runBtn').addEventListener('click', run);
-  $('nextBtn').addEventListener('click', () => goStep(step + 1));
+  $('nextBtn').addEventListener('click', () => {
+    if (step === STEPS.length - 1) location.href = 'constructor.html';
+    else goStep(step + 1);
+  });
   $('code').addEventListener('input', fitSlot);
   $('code').addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
   $('chips').addEventListener('click', e => {
@@ -233,12 +243,6 @@
   $('dots').addEventListener('click', e => {
     const d = e.target.closest('.dot');
     if (d) goStep(+d.dataset.step);
-  });
-  $('resetBtn').addEventListener('click', () => {
-    if (!confirm('Начать заново? Сайт сотрётся.')) return;
-    state = fresh();
-    save();
-    location.reload();
   });
 
   // ===== Весь код =====
@@ -268,28 +272,6 @@
     showFile('html');
   });
 
-  // ===== Диплом =====
-  function showDiploma() {
-    const date = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
-    openModal('<div class="diploma-wrap">' +
-      '<div class="diploma">' +
-      '<svg class="diploma-robot"><use href="#robot"/></svg>' +
-      '<div class="diploma-title">Диплом</div>' +
-      '<div class="diploma-sub">юного программиста</div>' +
-      '<div class="diploma-name">' + esc(state.name) + '</div>' +
-      '<p>за первый собственный сайт,<br>написанный на языках</p>' +
-      '<div class="skills"><span class="html">HTML</span><span class="css">CSS</span><span class="js">JavaScript</span></div>' +
-      '<div class="diploma-foot">' +
-      '<div><span>' + date + '</span><small>дата</small></div>' +
-      '<div><span class="sign">Байт</span><small>робот-учитель</small></div>' +
-      '</div></div>' +
-      '<div class="modal-actions">' +
-      '<button class="next" data-print>Распечатать</button>' +
-      '<button class="next" data-download>Скачать сайт</button>' +
-      '<button class="run" data-close>Закрыть</button>' +
-      '</div></div>');
-  }
-
   function openModal(html) {
     $('modal').innerHTML = html;
     $('modal').classList.remove('hidden');
@@ -297,25 +279,14 @@
   function closeModal() {
     if ($('modal').classList.contains('hidden')) return;
     $('modal').classList.add('hidden');
-    if (state.done === STEPS.length) say('Все шаги пройдены. Нажми на любой кружок с номером сверху — и поменяй что захочешь.');
   }
   $('modal').addEventListener('click', e => {
     const tab = e.target.closest('[data-file]');
     if (tab) { showFile(tab.dataset.file); return; }
-    if (e.target.closest('[data-print]')) { window.print(); return; }
-    if (e.target.closest('[data-download]')) { download(); return; }
     if (e.target.closest('[data-close]') || e.target.id === 'modal') closeModal();
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-  function download() {
-    const blob = new Blob([siteDoc(state.done)], { type: 'text/html' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'my-site.html';
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  }
 
 
   // ===== Приветствие =====
@@ -331,6 +302,9 @@
 
   render();
   showSite();
+  if (state.done === STEPS.length && step === STEPS.length - 1) {
+    say('Все 10 шагов пройдены! Можешь поменять любой шаг или жми «Дальше: конструктор».');
+  }
   if (state.name) $('welcome').classList.add('hidden');
   else $('nameInput').focus();
 })();

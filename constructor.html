@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Конструктор страницы</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body class="cons">
+
+  <header class="top">
+    <div class="logo">Мой первый сайт</div>
+    <nav class="stages" id="stages"></nav>
+    <div class="player"><span id="playerName"></span> <button class="reset" id="resetBtn" title="Начать заново для нового ученика">↺</button></div>
+  </header>
+
+  <div class="robot cons-robot">
+    <svg class="robot-face"><use href="#robot"/></svg>
+    <div class="bubble" id="bubble"></div>
+    <button class="next small" id="downloadBtn">Скачать страницу</button>
+    <button class="run" id="nextStage">Дальше: игра →</button>
+  </div>
+
+  <main class="cons-layout">
+    <!-- Палитра и задания -->
+    <aside class="tools">
+      <div class="tool-title">Добавить на страницу</div>
+      <div class="palette">
+        <button class="tile" data-add="h1"><span class="look look-h1">Аа</span><span class="tile-name">Заголовок</span><code>h1</code></button>
+        <button class="tile" data-add="p"><span class="look look-p"><i></i><i></i><i></i></span><span class="tile-name">Текст</span><code>p</code></button>
+        <button class="tile" data-add="img"><span class="look look-img" id="lookImg"></span><span class="tile-name">Картинка</span><code>img</code></button>
+        <button class="tile" data-add="button"><span class="look look-btn"><i>ОК</i></span><span class="tile-name">Кнопка</span><code>button</code></button>
+        <button class="tile" data-add="hr"><span class="look look-hr"><i></i></span><span class="tile-name">Линия</span><code>hr</code></button>
+      </div>
+
+      <div class="quests" id="quests"></div>
+
+      <div class="tool-title">Фон страницы</div>
+      <div class="swatches" id="bgSwatches"></div>
+    </aside>
+
+    <!-- Страница -->
+    <section class="cons-page">
+      <div class="browser">
+        <div class="browser-bar"><i></i><i></i><i></i><div class="address">мой-сайт.рф</div></div>
+        <div class="page" id="page"></div>
+      </div>
+    </section>
+
+    <!-- Код -->
+    <section class="cons-code">
+      <div class="code-card">
+        <div class="code-head"><span class="file html">index.html</span><span class="code-hint">код пишется сам · нажми на блок — его строчки подсветятся</span></div>
+        <div class="live-code" id="liveCode"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="levels.js"></script>
+  <script src="nav.js"></script>
+  <script src="constructor.js"></script>
+</body>
+</html>

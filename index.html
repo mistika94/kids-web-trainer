@@ -39,12 +39,14 @@
 
   <header class="top">
     <div class="logo">Мой первый сайт</div>
-    <div class="dots" id="dots"></div>
-    <div class="player"><span id="playerName"></span> <button class="reset" id="resetBtn" title="Начать заново">↺</button></div>
+    <nav class="stages" id="stages"></nav>
+    <div class="player"><span id="playerName"></span> <button class="reset" id="resetBtn" title="Начать заново для нового ученика">↺</button></div>
   </header>
 
   <main class="layout">
     <section class="left">
+      <div class="steps-bar"><span class="steps-label">Шаг</span><div class="dots" id="dots"></div></div>
+
       <div class="robot">
         <svg class="robot-face"><use href="#robot"/></svg>
         <div class="bubble" id="bubble"></div>
@@ -63,6 +65,7 @@
       </div>
 
       <button class="link" id="allCodeBtn">Посмотреть весь код моего сайта</button>
+
     </section>
 
     <section class="right">
@@ -76,6 +79,7 @@
   <div class="modal hidden" id="modal"></div>
 
   <script src="levels.js"></script>
+  <script src="nav.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

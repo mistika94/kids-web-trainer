@@ -356,14 +356,375 @@ button { font: inherit; cursor: pointer; color: inherit; }
 
 @media print {
   body { background: #fff; }
-  body > *:not(#modal) { display: none !important; }
+  body > *:not(.modal) { display: none !important; }
+  .more-games { display: none; }
   .modal { position: static; background: none; }
   .modal-actions { display: none; }
   .diploma { box-shadow: none; }
 }
 
+
+/* ===== Конструктор страницы ===== */
+body.cons { height: 100vh; overflow: hidden; }
+.next.small, .run.small { padding: 6px 16px; font-size: 16px; }
+
+.cons-layout {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 20px;
+  padding: 14px 20px 20px;
+}
+.tools {
+  overflow-y: auto;
+  padding: 14px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.tool-title { display: flex; justify-content: space-between; align-items: center; margin: 16px 0 8px; font-weight: 700; }
+.tool-title:first-child { margin-top: 0; }
+
+/* Палитра: у каждой плитки маленький образец того, что добавится */
+.palette { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px 6px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  font-size: 13px;
+  transition: transform .1s;
+}
+.tile:hover { background: #fff3c4; transform: translateY(-2px); }
+.tile:active { transform: translate(2px, 2px); }
+.tile code { font: 700 11px var(--mono); color: var(--blue); }
+.tile-name { font-weight: 600; }
+.look { display: grid; place-items: center; width: 48px; height: 34px; }
+.look-h1 { font: 700 26px/1 Georgia, serif; }
+.look-p { display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+.look-p i { display: block; width: 44px; height: 4px; background: #9aa0ad; border-radius: 2px; }
+.look-p i:last-child { width: 28px; }
+.look-img img { width: 34px; height: 34px; border: 1.5px solid var(--ink); border-radius: 6px; }
+.look-btn i { padding: 2px 10px; background: var(--yellow); border: 2px solid var(--ink); border-radius: 6px; font: 700 12px sans-serif; }
+.look-hr i { display: block; width: 44px; border-top: 3px solid var(--ink); }
+
+/* Задания */
+.quest-count { padding: 1px 8px; border-radius: 99px; background: var(--yellow); font-size: 13px; }
+.quests ul { margin: 0; padding: 0; list-style: none; }
+.quests li { display: flex; align-items: flex-start; gap: 8px; padding: 5px 0; font-size: 15px; line-height: 1.3; }
+.quests .check {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--ink);
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+}
+.quests li.done { color: var(--muted); text-decoration: line-through; }
+.quests li.done .check { background: var(--green); }
+
+.swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+.sw { width: 28px; height: 28px; border: 2px solid var(--ink); border-radius: 50%; }
+.sw.on { box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--ink); }
+
+/* Страница */
+.cons-page { min-height: 0; }
+.cons-page .browser { position: relative; min-height: 0; }
+.page { position: relative; flex: 1; overflow: auto; padding: 18px 18px 140px; background: #fff; }
+.blk { position: relative; margin: 6px 0; padding: 0 8px; border: 2px dashed transparent; border-radius: 8px; cursor: pointer; }
+.blk:hover { border-color: #c9cdd6; }
+.blk.sel { border: 2px solid var(--blue); }
+.blk-tag {
+  position: absolute;
+  top: -11px;
+  left: 8px;
+  display: none;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--blue);
+  color: #fff;
+  font: 700 11px/18px var(--mono);
+}
+.blk:hover .blk-tag, .blk.sel .blk-tag { display: block; }
+.blk:hover:not(.sel) .blk-tag { background: #9aa0ad; }
+.blk [contenteditable] { outline: none; cursor: text; }
+.blk button { cursor: pointer; font-size: 22px; padding: 8px 22px; border: 2px solid var(--ink); border-radius: 10px; }
+.flash { animation: flash .9s; }
+@keyframes flash { 30% { background: rgba(242, 193, 78, .45); } }
+.empty { margin-top: 40px; text-align: center; color: var(--muted); }
+
+/* Панелька над выбранным блоком */
+.toolbar {
+  position: absolute;
+  left: 50%;
+  z-index: 4;
+  width: max-content;
+  max-width: calc(100% - 16px);
+  padding: 8px 10px;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  box-shadow: 3px 3px 0 var(--ink);
+  color: var(--ink);
+  font: 15px 'Segoe UI', Tahoma, sans-serif;
+  text-align: left;
+  cursor: default;
+}
+.tb-title { margin-bottom: 6px; font-size: 13px; font-weight: 700; color: var(--muted); }
+.tb-title code { color: var(--blue); }
+.tb-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.tb-row + .tb-row { margin-top: 6px; }
+.tb-sep { width: 1px; height: 24px; margin: 0 4px; background: #d7d9df; }
+.tb-grow { flex: 1; }
+.tbb {
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 7px;
+  font-size: 14px;
+  line-height: 1;
+}
+.tbb:hover { background: #fff3c4; }
+.tbb.on { background: var(--yellow); }
+.tbb svg { width: 16px; height: 16px; vertical-align: middle; fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; }
+.tbb[data-remove] { color: var(--red); }
+.tb-dots { display: flex; gap: 3px; }
+.dot-c { width: 22px; height: 22px; border: 2px solid var(--ink); border-radius: 50%; }
+.dot-c.on { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--ink); }
+.tb-thumbs { display: flex; gap: 4px; }
+.thumb { padding: 1px; background: #fff; border: 2px solid var(--ink); border-radius: 6px; }
+.thumb img { display: block; width: 30px; height: 30px; border-radius: 3px; }
+.thumb.on { background: var(--yellow); }
+.tb-val { min-width: 36px; text-align: center; font: 700 14px var(--mono); }
+.tb-label { margin-right: 2px; font-size: 14px; font-weight: 600; }
+.tb-input { width: 150px; height: 30px; padding: 0 8px; font: inherit; border: 2px solid var(--ink); border-radius: 7px; outline: none; }
+.tb-input.wide { width: 220px; }
+.tb-input:focus { background: #fff8dc; }
+.tb-warn { color: var(--red); font-size: 14px; }
+
+/* Код */
+.cons-code { min-height: 0; }
+.cons-code .code-card { height: 100%; display: flex; flex-direction: column; }
+.code-hint { margin-left: 10px; color: #8b8f99; font-size: 13px; }
+.live-code { position: relative; flex: 1; overflow: auto; padding: 12px 0; color: #e3e3e3; font: 15px/1.6 var(--mono); }
+.ln { padding: 1px 14px 1px 42px; text-indent: -36px; white-space: pre-wrap; word-break: break-word; }
+.ln .num { display: inline-block; width: 36px; text-indent: 0; color: #6c7080; user-select: none; }
+.ln.hot { background: rgba(242, 193, 78, .2); box-shadow: inset 4px 0 0 var(--yellow); }
+
+/* Все задания выполнены — кнопка «Дальше» зовёт */
+.run.ready { animation: ready 1.4s ease-in-out infinite; }
+@keyframes ready { 50% { transform: scale(1.06); } }
+
+/* Игры под дипломом */
+.games { display: flex; flex-wrap: wrap; gap: 8px; }
+.games a {
+  padding: 4px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: #fff3c4;
+  color: var(--ink);
+  font-size: 16px;
+  text-decoration: none;
+}
+.games a:hover { background: var(--yellow); }
+
+/* Сообщение кнопки в конструкторе */
+.page-alert {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(34, 37, 43, .35);
+}
+.page-alert .card {
+  min-width: 240px;
+  max-width: 80%;
+  padding: 18px 24px 20px;
+  text-align: center;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.page-alert .head { margin-bottom: 6px; font-size: 14px; color: var(--muted); }
+.page-alert .text { margin-bottom: 16px; font-size: 26px; font-weight: 700; word-break: break-word; }
+
+/* ===== Игра «Поймай кота» ===== */
+.game-code { padding: 16px 20px; font-size: clamp(14px, 1.25vw, 18px); line-height: 1.75; }
+.choice-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; }
+.choice-label { margin-bottom: 4px; font-size: 15px; font-weight: 600; }
+.chip.on { background: var(--yellow); }
+.chip.small-pic img { width: 40px; height: 40px; }
+.chip.mini { flex-direction: row; gap: 6px; padding: 4px 10px; }
+.chip.mini i { width: 18px; height: 18px; border-width: 1.5px; }
+
+.game-page .right { display: flex; flex-direction: column; gap: 16px; }
+.game-page .left { gap: 14px; }
+.game-page .layout { align-items: start; }
+.game-page .browser { flex: none; height: 440px; min-height: 0; }
+.game-page .layout { padding: 18px 24px; }
+.hud { display: flex; gap: 24px; padding: 6px 14px; border-bottom: 2px solid var(--ink); background: #fff; font-size: 17px; }
+.hud b { font-family: var(--mono); }
+.arena { position: relative; flex: 1; overflow: hidden; background: lightgreen; }
+.target { position: absolute; cursor: pointer; user-select: none; touch-action: manipulation; border-radius: 10px; }
+.caught { animation: caught .2s; }
+@keyframes caught { 50% { transform: scale(1.25) rotate(8deg); } }
+.arena-msg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+  font-size: 22px;
+  line-height: 1.6;
+}
+.run:disabled { opacity: .5; cursor: default; }
+.records {
+  padding: 12px 18px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.records h3 { margin: 0 0 6px; font: 700 20px var(--hand); }
+.records ol { margin: 0; padding-left: 26px; columns: 2; column-gap: 30px; }
+.records li { padding: 2px 0; }
+.records li span { display: inline-block; min-width: 110px; }
+.records li b { font-family: var(--mono); }
+.no-records { list-style: none; margin-left: -26px; color: var(--muted); }
+
+/* ===== Этапы в шапке (общие для всех частей) ===== */
+.stages { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
+.stage {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 12px 4px 5px;
+  border: 2px solid var(--ink);
+  border-radius: 99px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+a.stage:hover, button.stage:hover { background: #fff3c4; }
+.stage-num {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #eceae4;
+  font-size: 14px;
+  font-weight: 700;
+}
+.stage.done .stage-num { background: var(--green); color: #fff; }
+.stage.current { background: var(--yellow); }
+.stage.locked { border-color: #c4c8d0; color: #a6abb6; cursor: not-allowed; }
+.stage-arrow { color: #a6abb6; }
+
+/* Шаги 1–10 над роботом */
+.steps-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.steps-label { font-weight: 700; }
+.steps-bar .dots { flex: none; justify-content: flex-start; }
+.steps-bar .dot { width: 34px; height: 34px; font-size: 15px; }
+
+/* Полоса с роботом в конструкторе */
+.cons-robot { align-items: center; padding: 14px 20px 0; }
+.cons-robot .bubble { font-size: 18px; }
+.cons-robot .robot-face { width: 52px; height: 58px; }
+.cons-robot .run, .cons-robot .next { white-space: nowrap; text-decoration: none; }
+
+/* Под дипломом — игры */
+.more-games {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  font-size: 16px;
+}
+.more-games .games { margin-top: 8px; }
+.arena-msg .run { margin-top: 12px; font-size: 18px; padding: 8px 18px; }
+
+/* ===== Мобильная версия (планшет и телефон) ===== */
 @media (max-width: 1000px) {
-  .layout { grid-template-columns: 1fr; padding: 16px; }
-  .top { flex-wrap: wrap; }
-  .code { font-size: 20px; padding: 16px; }
+  /* clip, а не hidden: не ломает «прилипание» сайта к верху */
+  body, body.cons { height: auto; min-height: 100vh; overflow: visible; overflow-x: clip; }
+  .top { flex-wrap: wrap; gap: 8px 12px; padding: 8px 12px; }
+  .logo { font-size: 18px; }
+  .stages { order: 3; flex: 1 1 100%; min-width: 0; justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+  .left, .tools, .cons-code, .code-card { min-width: 0; }
+  .player { margin-left: auto; }
+
+  .layout, .cons-layout { display: flex; flex-direction: column; gap: 16px; padding: 12px; }
+
+  /* Сайт всегда сверху и не уезжает при прокрутке — видно, что меняет код */
+  .right, .cons-page { order: -1; position: sticky; top: 0; z-index: 10; padding: 6px 0 4px; background: var(--paper); }
+  .right .browser, .cons-page .browser { height: 40vh; min-height: 230px; }
+
+  /* В игре поле сверху, но не прилипает: под ним рекорды */
+  .game-page .layout { align-items: stretch; }
+  .game-page .right { position: static; padding: 0; background: none; }
+  .game-page .browser { height: 58vh; min-height: 300px; }
+
+  .cons-robot { flex-wrap: wrap; padding: 10px 12px 0; }
+  .cons-robot .bubble { flex: 1 1 calc(100% - 70px); }
+  .tools { overflow: visible; }
+  .cons-code .code-card { height: 320px; }
+  .page { padding-bottom: 60px; }
+}
+
+@media (max-width: 600px) {
+  body { font-size: 16px; }
+  .stage { padding: 3px 10px 3px 4px; font-size: 13px; }
+  .stage-num { width: 22px; height: 22px; font-size: 12px; }
+  .stage-arrow { display: none; }
+
+  .robot { gap: 10px; }
+  .robot-face { width: 44px; height: 50px; }
+  .bubble { padding: 10px 14px; font-size: 16px; }
+  .bubble::before { top: 14px; }
+  .steps-bar .dot { width: 28px; height: 28px; font-size: 13px; }
+  .steps-label { display: none; }
+
+  .code { padding: 14px; font-size: 15px; }
+  .game-code { font-size: 14px; }
+  .actions { flex-wrap: wrap; }
+  .run, .next { padding: 10px 18px; font-size: 18px; }
+  .chip.pic img { width: 56px; height: 56px; }
+  .choice-groups { grid-template-columns: 1fr; }
+  .records ol { columns: 1; }
+  .hud { gap: 14px; font-size: 15px; }
+
+  .box { padding: 18px; }
+  .diploma { padding: 24px 18px 20px; }
+  .diploma-title { font-size: 30px; }
+  .diploma-name { min-width: 0; font-size: 26px; }
+  .diploma-foot { flex-direction: column; gap: 12px; }
+  .welcome h1 { font-size: 26px; }
+
+  .cons-robot .run, .cons-robot .next { flex: 1; padding: 8px 10px; font-size: 15px; }
+  .toolbar { font-size: 14px; }
+  .tb-input { width: 120px; }
+  .tb-input.wide { width: 100%; }
 }

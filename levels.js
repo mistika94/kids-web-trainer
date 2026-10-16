@@ -73,10 +73,10 @@ const STEPS = [
     win: 'Это твоя первая программа. Нажми кнопку на сайте справа.'
   },
   {
-    key: 'magic', name: 'Фокус', file: 'script.js',
-    say: 'Последний шаг: пусть кнопка ещё и меняет цвет фона. Выбери цвет.',
-    code: ["button.onclick = function() {\n  alert('", { show: 'msg' }, "');\n  document.body.style.background = '", { field: 'magic', ph: 'gold' }, "';\n};"],
-    colors: LIGHT_COLORS.concat(['gold', 'tomato']),
-    win: 'Получилось. Нажми кнопку на сайте и посмотри, что будет.'
+    key: 'swap', name: 'Фокус', file: 'script.js',
+    say: 'Последний шаг: пусть кнопка ещё и меняет картинку. Выбери, на какую.',
+    code: ["button.onclick = function() {\n  alert('", { show: 'msg' }, "');\n  let img = document.querySelector('img');\n  img.src = 'img/", { field: 'swap', ph: 'rocket' }, ".svg';\n};"],
+    pics: true,
+    win: 'Получилось! Нажми кнопку на сайте — картинка поменяется. Первая часть готова: жми «Дальше: конструктор».'
   }
 ];
